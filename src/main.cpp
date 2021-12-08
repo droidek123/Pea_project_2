@@ -8,6 +8,7 @@ void displayMainMenu();
 
 int main() {
     bool quit = false;
+    int time = 0;
     char option;
     string name;
     Graph graph;
@@ -26,7 +27,12 @@ int main() {
                 graph.loadData(name);
                 break;
             case '2':
-                //TODO
+                do
+                {
+                    std::cout << "Podaj czas [s]> ";
+                    cin >> time;
+                } while (!time);
+                break;
                 break;
             case '3':
                 //TODO
@@ -36,7 +42,7 @@ int main() {
                 break;
             case '5': {
                 TabuSearch tabuSearch;
-                tabuSearch.solve(graph, 50);
+                tabuSearch.solve(graph, time);
                 break;
             }
             case '9':

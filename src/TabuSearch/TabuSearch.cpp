@@ -54,15 +54,17 @@ void TabuSearch::solve(const Graph &graph, int timeForSearch) {
     double time;
     double foundTime;
 
-    this->tabuMatrix.resize(this->number_of_vertexes);
-
-    for (int j = 0; j < this->number_of_vertexes; ++j) {
-        this->tabuMatrix[j].resize(this->number_of_vertexes, 0);
-    }
 
     start = std::clock();
 
     while (true) {
+
+        this->tabuMatrix.resize(this->number_of_vertexes);
+
+        for (auto &it: this->tabuMatrix) {
+            it.resize(this->number_of_vertexes, 0);
+        }
+
         for (int step = 0; step < 15 * this->number_of_vertexes; ++step) {
             firstToSwap = 0;
             secondToSwap = 0;
@@ -118,11 +120,5 @@ void TabuSearch::solve(const Graph &graph, int timeForSearch) {
             it.clear();
         }
         this->tabuMatrix.clear();
-
-        this->tabuMatrix.resize(this->number_of_vertexes);
-
-        for (auto &it: this->tabuMatrix) {
-            it.resize(this->number_of_vertexes, 0);
-        }
     }
 }
