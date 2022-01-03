@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <ctime>
-#include <Windows.h>
 #include <iostream>
 #include <random>
 #include "TabuSearch.hpp"
@@ -39,12 +38,31 @@ int TabuSearch::calculatePath(const vector<int> &path) {
     return cost;
 }
 
-void TabuSearch::solve(const Graph &graph, int timeForSearch) {
+void TabuSearch::insert(int first, int second) {
+    if (second == first) return;
+    if (second < first){
+        int tmp = permutation[first];
+        for (int i = first; i > second; i--){
+            permutation[i] = permutation[i-1];
+        }
+        permutation[second] = tmp;
+    }
+    else {
+        int tmp = permutation[first];
+        for (int i = first; i < second; i++){
+            permutation[i] = permutation[i+1];
+        }
+        permutation[second] = tmp;
+    }
+
+}
+
+void TabuSearch::solve(const Graph &graph, int timeForSearch, bool diversification, int neighborhood) {
     this->searchTime = timeForSearch;
     this->matrix = graph.matrix;
     this->number_of_vertexes = graph.number_of_vertices;
     vector<int> best;
-    vector<int> permutation = randomPermutation(number_of_vertexes);
+    permutation = randomPermutation(number_of_vertexes);
     vector<int> next(permutation);
     int result = 1 << 30;
     int firstToSwap;
@@ -52,7 +70,6 @@ void TabuSearch::solve(const Graph &graph, int timeForSearch) {
     int nextCost;
     clock_t start;
     double time;
-    double foundTime;
 
 
     start = std::clock();
@@ -72,13 +89,13 @@ void TabuSearch::solve(const Graph &graph, int timeForSearch) {
 
             for (int first = 0; first < this->number_of_vertexes; ++first) {
                 for (int second = first + 1; second < this->number_of_vertexes; ++second) {
-                    std::swap(permutation[first], permutation[second]);
+                    if(neighborhood == 0) std::swap(permutation[first], permutation[second]);
+                    else if(neighborhood == 1) insert(first, second);
                     int currentCost = calculatePath(permutation);
 
                     if (currentCost < result) {
                         result = currentCost;
                         best = permutation;
-                        foundTime = (std::clock() - start) / (double) CLOCKS_PER_SEC;
                     }
 
                     if (currentCost < nextCost) {
@@ -91,7 +108,8 @@ void TabuSearch::solve(const Graph &graph, int timeForSearch) {
                         }
                     }
 
-                    std::swap(permutation[first], permutation[second]);
+                    if(neighborhood == 0)  std::swap(permutation[first], permutation[second]);
+                    else if(neighborhood == 1) insert(first, second);
 
                     time = (std::clock() - start) / (double) CLOCKS_PER_SEC;
 
@@ -102,7 +120,6 @@ void TabuSearch::solve(const Graph &graph, int timeForSearch) {
                         }
 
                         cout << "\nKoszt: " << result << endl;
-                        cout << "Znaleziono po: " << foundTime << " s " << endl;
                         return;
                     }
 
@@ -111,10 +128,10 @@ void TabuSearch::solve(const Graph &graph, int timeForSearch) {
             permutation = next;
             this->tabuMatrix[firstToSwap][secondToSwap] += this->number_of_vertexes;
         }
-
-        permutation.clear();
-
-        permutation = randomPermutation(this->number_of_vertexes);
+        if(diversification) {
+            permutation.clear();
+            permutation = randomPermutation(this->number_of_vertexes);
+        }
 
         for (auto &it: this->tabuMatrix) {
             it.clear();

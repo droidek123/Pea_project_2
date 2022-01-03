@@ -13,6 +13,7 @@ class TabuSearch {
 public:
     vector<vector<int>> matrix;
     vector<vector<int>> tabuMatrix;
+    vector<int> permutation;
     int number_of_vertexes = 0;
     int searchTime = 0;
 
@@ -24,7 +25,9 @@ public:
 
     int calculatePath(const vector <int>& path);
 
-    void solve(const Graph& graph, int timeForSearch);
+    void insert(int first, int second);
+
+    void solve(const Graph& graph, int timeForSearch, bool diversification, int neighborhood);
 };
 
 

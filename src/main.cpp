@@ -10,6 +10,8 @@ int main() {
     bool quit = false;
     int time = 0;
     char option;
+    bool diversification = false;
+    int neighborhood = 0;
     string name;
     Graph graph;
     do {
@@ -22,7 +24,7 @@ int main() {
                 quit = true;
                 break;
             case '1':
-                cout << ("Plese enter name of the file: ");
+                cout << "Plese enter name of the file: ";
                 cin >> name;
                 graph.loadData(name);
                 break;
@@ -33,16 +35,18 @@ int main() {
                     cin >> time;
                 } while (!time);
                 break;
-                break;
             case '3':
-                //TODO
+                diversification = !diversification;
                 break;
             case '4':
-                //TODO
+                std::cout << "Please choose a neighborhood:\n"
+                             "0 - swap\n"
+                             "1 - insert\n";
+                cin >> neighborhood;
                 break;
             case '5': {
                 TabuSearch tabuSearch;
-                tabuSearch.solve(graph, time);
+                tabuSearch.solve(graph, time, diversification, neighborhood);
                 break;
             }
             case '9':
