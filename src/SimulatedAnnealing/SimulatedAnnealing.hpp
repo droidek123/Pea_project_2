@@ -1,6 +1,3 @@
-//
-// Created by Andrzej on 08.12.2021.
-//
 #pragma once
 
 #ifndef PEA_PROJECT_2_SIMULATEDANNEALING_HPP
@@ -11,21 +8,21 @@
 
 class SimulatedAnnealing {
 public:
-    std::vector<int> solution;
+    [[maybe_unused]] std::vector<int> solution;
     double temperatureBuffer = 0;
     double coolingRate = 0;
     double timeBound = 0;
     vector<vector<int>> matrix;
-    int size;
+    int size{};
 
-    SimulatedAnnealing(Graph graph, int time, double rate);
+    SimulatedAnnealing();
     ~SimulatedAnnealing();
 
-    void solve();
-    vector<int> random_permutation(int size);
+    void solve(const Graph &graph, int time, double rate);
+    static vector<int> random_permutation(int size);
     double calculateTemperature();
     int calculatePath(vector <int> path);
-    double getProbability(int diff, double temperature);
+    static double getProbability(int diff, double temperature);
 };
 
 

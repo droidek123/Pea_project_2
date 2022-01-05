@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Graph/Graph.hpp"
+#include "SimulatedAnnealing/SimulatedAnnealing.hpp"
 #include "TabuSearch/TabuSearch.hpp"
 
 using namespace std;
@@ -9,6 +10,7 @@ void displayMainMenu();
 int main() {
     bool quit = false;
     int time = 0;
+    double temperatureFactor = 0;
     char option;
     bool diversification = false;
     int neighborhood = 0;
@@ -31,22 +33,33 @@ int main() {
             case '2':
                 do
                 {
-                    std::cout << "Podaj czas [s]> ";
+                    cout << "Podaj czas [s]> ";
                     cin >> time;
                 } while (!time);
                 break;
-            case '3':
+            case '3': {
+                cout << "Podaj wspolczynnik temperatury";
+                cin >> temperatureFactor;
+                break;
+            }
+            case '4':
                 diversification = !diversification;
                 break;
-            case '4':
+            case '5':
                 std::cout << "Please choose a neighborhood:\n"
                              "0 - swap\n"
                              "1 - insert\n";
                 cin >> neighborhood;
                 break;
-            case '5': {
-                TabuSearch tabuSearch;
-                tabuSearch.solve(graph, time, diversification, neighborhood);
+            case '6': {
+                TS tabuSearch;
+//                tabuSearch.solve(graph, time, diversification, neighborhood);
+                std::cout << "\n########################################\n" << tabuSearch.tabuSearch(graph,time, diversification, neighborhood);
+                break;
+            }
+            case '7': {
+                SimulatedAnnealing simulatedAnnealing;
+                simulatedAnnealing.solve(graph, time, temperatureFactor);
                 break;
             }
             case '9':
@@ -73,10 +86,12 @@ int main() {
 void displayMainMenu(){
     cout << "================== MAIN MENU ==================" << endl;
     cout << "\t   1. Load from file" << endl;
-    cout << "\t   2. Enter the stop criterion" << endl;
-    cout << "\t   3. Diversification on / off" << endl;
-    cout << "\t   4. Choice of neighborhood" << endl;
-    cout << "\t   5. Tabu search" << endl;
+    cout << "\t   3. Enter the time" << endl;
+    cout << "\t   3. Enter the stop criterion" << endl;
+    cout << "\t   4. Diversification on / off" << endl;
+    cout << "\t   5. Choice of neighborhood" << endl;
+    cout << "\t   6. Tabu search" << endl;
+    cout << "\t   7. Simulated Annealing" << endl;
     cout << "\t   9. Generate adjacency matrix" << endl;
     cout << "\t   a. Display adjacency matrix" << endl;
     cout << "\t   b. Tests" << endl;

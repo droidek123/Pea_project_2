@@ -6,136 +6,207 @@
 #include <ctime>
 #include <iostream>
 #include <random>
+#include <sstream>
 #include "TabuSearch.hpp"
 
 using namespace std;
 
-TabuSearch::TabuSearch() = default;
+std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool diversification, int neighborhood) {
+    matrix = graph.matrix;
+    number_of_vertexes = graph.number_of_vertices;
+    stopCriterion = timeForSearch;
+    tabuList.clear();
+    clock_t t;
+    double time = 0;
+    t = std::clock();
+    int *current_permutation = new int[number_of_vertexes]; // stores currently analyzed permutation
 
-TabuSearch::~TabuSearch() = default;
+    //first permutation - random permutation
+    //int length = beginning(current_permutation); // stores the best known length
 
-vector<int> TabuSearch::randomPermutation(int size) {
-    vector<int> temp;
-    temp.reserve(size);
+    for(int i = 0; i < number_of_vertexes;i++)
+        current_permutation[i] = i;
 
-    for (int i = 0; i < size; i++) {
-        temp.push_back(i);
+//    current_permutation = randomPermutation(number_of_vertexes);
+    int length = countPath(current_permutation);
+
+    int *result_permutation = new int[number_of_vertexes]; // stores the best known permutation
+    for (int i = 0; i < number_of_vertexes; i++){
+        result_permutation[i] = current_permutation[i];
     }
 
-    shuffle(temp.begin(), temp.end(), std::mt19937(std::random_device()()));
+    int numberOfIterationsWithoutChange = number_of_vertexes * 3; // maximum number of iterations without a change - diversification
+    while (time  < stopCriterion){
+        // new solution - the best from the neighbourhood
+//        TabuElement tabuElement = newSolution(current_permutation); // returns swapped i, j
 
-    return temp;
-}
-
-int TabuSearch::calculatePath(const vector<int> &path) {
-    int cost = 0;
-
-    for (int i = 0; i < path.size() - 1; ++i) {
-        cost += matrix[path[i]][path[i + 1]];
-    }
-    cost += matrix[path[number_of_vertexes - 1]][path[0]];
-
-    return cost;
-}
-
-void TabuSearch::insert(int first, int second) {
-    if (second == first) return;
-    if (second < first){
-        int tmp = permutation[first];
-        for (int i = first; i > second; i--){
-            permutation[i] = permutation[i-1];
-        }
-        permutation[second] = tmp;
-    }
-    else {
-        int tmp = permutation[first];
-        for (int i = first; i < second; i++){
-            permutation[i] = permutation[i+1];
-        }
-        permutation[second] = tmp;
-    }
-
-}
-
-void TabuSearch::solve(const Graph &graph, int timeForSearch, bool diversification, int neighborhood) {
-    this->searchTime = timeForSearch;
-    this->matrix = graph.matrix;
-    this->number_of_vertexes = graph.number_of_vertices;
-    vector<int> best;
-    permutation = randomPermutation(number_of_vertexes);
-    vector<int> next(permutation);
-    int result = 1 << 30;
-    int firstToSwap;
-    int secondToSwap;
-    int nextCost;
-    clock_t start;
-    double time;
-
-
-    start = std::clock();
-
-    while (true) {
-
-        this->tabuMatrix.resize(this->number_of_vertexes);
-
-        for (auto &it: this->tabuMatrix) {
-            it.resize(this->number_of_vertexes, 0);
+        TabuElement tabuElement{};
+        int min = INT32_MAX;
+        for (int i = 0; i < number_of_vertexes; i++) {
+            current_permutation[i] = result_permutation[i];
         }
 
-        for (int step = 0; step < 15 * this->number_of_vertexes; ++step) {
-            firstToSwap = 0;
-            secondToSwap = 0;
-            nextCost = 1 << 30;
-
-            for (int first = 0; first < this->number_of_vertexes; ++first) {
-                for (int second = first + 1; second < this->number_of_vertexes; ++second) {
-                    if(neighborhood == 0) std::swap(permutation[first], permutation[second]);
-                    else if(neighborhood == 1) insert(first, second);
-                    int currentCost = calculatePath(permutation);
-
-                    if (currentCost < result) {
-                        result = currentCost;
-                        best = permutation;
+        for (int i = 1; i < number_of_vertexes - 1; i++) {
+            for (int j = 1; j < number_of_vertexes - 1; j++) {
+                if (i != j && !inTabuList(i, j)) {
+                    switch(currentNeighbourhood) {  // choose neighbourhood
+                        case 0: swap(current_permutation, i, j); break;
+                        case 1: insert(current_permutation, i, j); break;
                     }
+                    int tmp = countPath(current_permutation);
 
-                    if (currentCost < nextCost) {
-                        if (this->tabuMatrix[second][first] < step) {
-                            nextCost = currentCost;
-                            next = permutation;
-
-                            firstToSwap = second;
-                            secondToSwap = first;
+                    if (tmp <= min) {
+                        tabuElement.i = j; tabuElement.j = i;
+                        min = tmp;
+                        for (int k = 0; k < number_of_vertexes; k++) {
+                            result_permutation[k] = current_permutation[k]; // here is the best permutation in the neighbourhood
                         }
                     }
-
-                    if(neighborhood == 0)  std::swap(permutation[first], permutation[second]);
-                    else if(neighborhood == 1) insert(first, second);
-
-                    time = (std::clock() - start) / (double) CLOCKS_PER_SEC;
-
-                    if (time >= searchTime) {
-                        cout << "Droga: ";
-                        for (int d = 0; d < this->number_of_vertexes; d++) {
-                            cout << best[d] << " ";
-                        }
-
-                        cout << "\nKoszt: " << result << endl;
-                        return;
+                    switch(currentNeighbourhood){
+                        case 0: swap(current_permutation, i, j); break;
+                        case 1: insert(current_permutation, j, i); break;
                     }
 
                 }
             }
-            permutation = next;
-            this->tabuMatrix[firstToSwap][secondToSwap] += this->number_of_vertexes;
-        }
-        if(diversification) {
-            permutation.clear();
-            permutation = randomPermutation(this->number_of_vertexes);
         }
 
-        for (auto &it: this->tabuMatrix) {
-            it.clear();
+        int tmp = countPath(current_permutation); // the length of the found route
+
+        if (tmp < length){ // if the solution is better, change for the new one
+            numberOfIterationsWithoutChange = number_of_vertexes * 3;
+            length = tmp;
+            for (int i = 0; i < number_of_vertexes; i++){
+                result_permutation[i] = current_permutation[i];
+            }
         }
-        this->tabuMatrix.clear();
+
+        //tabu list actualisation: reducing the lifetime (cadence) and removing unnecessary items
+        for(auto it = tabuList.begin(); it != tabuList.end(); ++it) {
+            it->lifetime--;
+
+            if (it->lifetime == 0){
+                tabuList.erase(it);
+                --it;
+            }
+        }
+
+        // add new elements to the tabu list
+        if (tabuList.size() < number_of_vertexes * 2 ) { // maximum size of the tabu list
+            tabuElement.lifetime = number_of_vertexes * 2;
+            tabuList.push_back(tabuElement);
+        }
+
+
+        // diversification: if better after the restart then swap
+//        if(diversification && (numberOfIterationsWithoutChange <= 0)){
+//            restart(current_permutation);
+//            tmp = countPath(current_permutation);
+//
+//            numberOfIterationsWithoutChange = number_of_vertexes * 3;
+//            if (tmp <= length){
+//                length = tmp;
+//                for (int i = 0; i < number_of_vertexes; i++){
+//                    result_permutation[i] = current_permutation[i];
+//                }
+//            }
+//        }
+        numberOfIterationsWithoutChange--;
+        time = (std::clock() - t) / (double) CLOCKS_PER_SEC;
     }
+
+    std::stringstream ss;
+    ss << length << std::endl;
+
+    delete[] current_permutation;
+    delete[] result_permutation;
+    tabuList.clear();
+    return ss.str();
+}
+
+
+// Finds the best solution in the neighbourhood
+TabuElement TS::newSolution(int *result_permutation) {
+    TabuElement tabuElement{};
+    int min = INT32_MAX;
+    int *current_permutation = new int[number_of_vertexes]; // current permutation
+    for (int i = 0; i < number_of_vertexes; i++) {
+        current_permutation[i] = result_permutation[i];
+    }
+
+    for (int i = 1; i < number_of_vertexes - 1; i++) {
+        for (int j = 1; j < number_of_vertexes - 1; j++) {
+            if (i != j && !inTabuList(i, j)) {
+                switch(currentNeighbourhood) {  // choose neighbourhood
+                    case 0: swap(current_permutation, i, j); break;
+                    case 1: insert(current_permutation, i, j); break;
+                }
+                int tmp = countPath(current_permutation);
+
+                if (tmp <= min) {
+                    tabuElement.i = j; tabuElement.j = i;
+                    min = tmp;
+                    for (int k = 0; k < number_of_vertexes; k++) {
+                        result_permutation[k] = current_permutation[k]; // here is the best permutation in the neighbourhood
+                    }
+                }
+                // todo sprzwdzic czy to jest jeszcze potrzebne
+//                switch(currentNeighbourhood){
+//                    case 0: swap(current_permutation, i, j); break;
+//                    case 1: insert(current_permutation, j, i); break;
+//                }
+
+            }
+        }
+    }
+    return tabuElement;
+}
+
+bool TS::inTabuList(int i, int j) {
+    for (auto &it : tabuList) {
+        if ((it.i == i && it.j == j)||(it.i == j && it.j == i)) // cases in which we do not swap
+            return true;
+    }
+    return false;
+}
+
+int TS::countPath(int *permutation) {
+    int length = 0;
+    int end;
+
+    for (int i = 0; i < number_of_vertexes -1; i++){
+        length += matrix[permutation[i]][permutation[i+1]];
+        end = i;
+    }
+    length += matrix[permutation[number_of_vertexes-1]][0];
+
+    return length;
+}
+
+
+
+void TS::swap(int *permutation, int left, int right) {
+    if (right == left) return;
+    int tmp = permutation[left];
+    permutation[left] = permutation[right];
+    permutation[right] = tmp;
+}
+
+void TS::insert(int *permutation, int left, int right) {
+    if (right == left) return;
+    if (right < left){
+        int tmp = permutation[left];
+        for (int i = left; i > right; i--){
+            permutation[i] = permutation[i-1];
+        }
+        permutation[right] = tmp;
+    }
+    else {
+        int tmp = permutation[left];
+        for (int i = left; i < right; i++){
+            permutation[i] = permutation[i+1];
+        }
+        permutation[right] = tmp;
+    }
+
 }

@@ -1,6 +1,3 @@
-//
-// Created by Andrzej on 22.11.2021.
-//
 #pragma once
 
 #ifndef PEA_PROJECT_2_TABUSEARCH_HPP
@@ -9,25 +6,31 @@
 #include "../Graph/Graph.hpp"
 #include <vector>
 
-class TabuSearch {
+struct TabuElement {
+    int i;
+    int j;
+    int lifetime;
+};
+
+class TS {
 public:
+    std::string tabuSearch(const Graph& graph, int timeForSearch, bool diversification, int neighborhood);
+private:
     vector<vector<int>> matrix;
-    vector<vector<int>> tabuMatrix;
-    vector<int> permutation;
     int number_of_vertexes = 0;
-    int searchTime = 0;
+    bool diversification = false; //diversification is turned on, 0 - no, 1 - yes
+    double stopCriterion = 10; // time in seconds
+    int currentNeighbourhood = 0;
+    std::vector<TabuElement> tabuList;
+    int start = 0;
 
-    TabuSearch();
+    TabuElement newSolution(int *result_permutation);
+    int countPath(int *permutation);
+    bool inTabuList(int i, int j);
 
-    ~TabuSearch();
-
-    static vector<int> randomPermutation(int size);
-
-    int calculatePath(const vector <int>& path);
-
-    void insert(int first, int second);
-
-    void solve(const Graph& graph, int timeForSearch, bool diversification, int neighborhood);
+    void swap(int *permutation, int left, int right);
+    void insert(int *permutation, int left, int right);
+    int * randomPermutation(int size);
 };
 
 
