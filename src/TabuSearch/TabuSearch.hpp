@@ -17,20 +17,20 @@ public:
     std::string tabuSearch(const Graph& graph, int timeForSearch, bool diversification, int neighborhood);
 private:
     vector<vector<int>> matrix;
+    vector<int> current_permutation;
+//    vector<int> best_permutation;
     int number_of_vertexes = 0;
-    bool diversification = false; //diversification is turned on, 0 - no, 1 - yes
-    double stopCriterion = 10; // time in seconds
-    int currentNeighbourhood = 0;
+    bool diversification;
+    double stopCriterion ; // time in seconds
+    int currentNeighbourhood ;
     std::vector<TabuElement> tabuList;
-    int start = 0;
 
-    TabuElement newSolution(int *result_permutation);
-    int countPath(int *permutation);
-    bool inTabuList(int i, int j);
+    int countPath(const vector<int> &path);
+    bool isInTabu(int i, int j);
 
-    void swap(int *permutation, int left, int right);
-    void insert(int *permutation, int left, int right);
-    int * randomPermutation(int size);
+//    void swap(int left, int right);
+    void insert(int left, int right);
+    static vector<int> randomPermutation(int size);
 };
 
 

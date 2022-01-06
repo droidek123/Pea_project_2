@@ -43,6 +43,8 @@ int main() {
                 break;
             }
             case '4':
+                if (diversification == 0)cout << "wlaczono dywersyfikacje" << endl;
+                else cout << "wylaczono dywesyfikacje" << endl;
                 diversification = !diversification;
                 break;
             case '5':
@@ -53,8 +55,7 @@ int main() {
                 break;
             case '6': {
                 TS tabuSearch;
-//                tabuSearch.solve(graph, time, diversification, neighborhood);
-                std::cout << "\n########################################\n" << tabuSearch.tabuSearch(graph,time, diversification, neighborhood);
+                std::cout << tabuSearch.tabuSearch(graph,time, diversification, neighborhood);
                 break;
             }
             case '7': {
@@ -84,7 +85,7 @@ int main() {
 }
 
 void displayMainMenu(){
-    cout << "================== MAIN MENU ==================" << endl;
+    cout << "================== MENU ==================" << endl;
     cout << "\t   1. Load from file" << endl;
     cout << "\t   3. Enter the time" << endl;
     cout << "\t   3. Enter the stop criterion" << endl;
@@ -96,5 +97,5 @@ void displayMainMenu(){
     cout << "\t   a. Display adjacency matrix" << endl;
     cout << "\t   b. Tests" << endl;
     cout << "\t   0. Exit" << endl << endl;
-    cout << "Chosen option: ";
+    cout << "Chosen option:  ";
 }
