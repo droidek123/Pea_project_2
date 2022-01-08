@@ -18,11 +18,12 @@ public:
     SimulatedAnnealing();
     ~SimulatedAnnealing();
 
-    void solve(const Graph &graph, int time, double rate);
+    void solve(const Graph &graph, int time, double rate, int neighborhood);
     static vector<int> random_permutation(int size);
     double calculateTemperature();
     int calculatePath(vector <int> path);
     static double getProbability(int diff, double temperature);
+    static vector<int> insert(vector<int> permutation, int left, int right);
 };
 
 

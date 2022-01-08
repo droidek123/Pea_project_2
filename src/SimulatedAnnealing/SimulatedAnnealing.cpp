@@ -9,7 +9,7 @@ SimulatedAnnealing::SimulatedAnnealing() = default;
 
 SimulatedAnnealing::~SimulatedAnnealing() = default;
 
-void SimulatedAnnealing::solve(const Graph &graph, int time, double rate) {
+void SimulatedAnnealing::solve(const Graph &graph, int time, double rate, int neighborhood) {
     matrix = graph.matrix;
     size = graph.number_of_vertices;
     timeBound = time;
@@ -22,8 +22,8 @@ void SimulatedAnnealing::solve(const Graph &graph, int time, double rate) {
     vector<int> next(permutation);
 
     std::clock_t start;
-    int firstToSwap;
-    int secondToSwap;
+    int first;
+    int second;
     int result = INT_MAX;
     double foundTime = 0;
     start = std::clock();
@@ -38,11 +38,13 @@ void SimulatedAnnealing::solve(const Graph &graph, int time, double rate) {
                 next = permutation;
                 do
                 {
-                    firstToSwap = rand() % size;
-                    secondToSwap = rand() % size;
-                } while (firstToSwap == secondToSwap);
+                    first = rand() % size;
+                    second = rand() % size;
+                } while (first == second);
 
-                std::swap(next[firstToSwap],next[secondToSwap]);
+                if (neighborhood == 0) std::swap(next[first],next[second]);
+                else next = insert(next,first,second);
+
 
                 nextCost = calculatePath(next);
 
@@ -97,15 +99,15 @@ vector<int> SimulatedAnnealing::random_permutation(int size) {
 double SimulatedAnnealing::calculateTemperature() {
     vector<int> origin;
 
-    int firstToSwap;
-    int secondToSwap;
+    int first;
+    int second;
     int best = INT_MAX;
 
     for (int i = 0; i < 10000; i++){
         do {
-            firstToSwap = rand() % size;
-            secondToSwap = rand() % size;
-        } while (firstToSwap == secondToSwap);
+            first = rand() % size;
+            second = rand() % size;
+        } while (first == second);
 
         origin = random_permutation(size);
         if (best > calculatePath(origin)){
@@ -129,4 +131,24 @@ int SimulatedAnnealing::calculatePath(vector<int> path) {
 
 double SimulatedAnnealing::getProbability(int diff, double temperature) {
     return exp(diff / temperature);
+}
+
+vector<int> SimulatedAnnealing::insert(vector<int> permutation, int left, int right) {
+    if (right < left){
+        int tmp = permutation[left];
+        for (int i = left; i > right; i--){
+            permutation[i] = permutation[i-1];
+        }
+        permutation[right] = tmp;
+        return permutation;
+    }
+    else {
+        int tmp = permutation[left];
+        for (int i = left; i < right; i++){
+            permutation[i] = permutation[i+1];
+        }
+        permutation[right] = tmp;
+        return permutation;
+    }
+
 }
