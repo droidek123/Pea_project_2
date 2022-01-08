@@ -9,7 +9,7 @@
 class SimulatedAnnealing {
 public:
     [[maybe_unused]] std::vector<int> solution;
-    double temperatureBuffer = 0;
+    double temperature = 0;
     double coolingRate = 0;
     double timeBound = 0;
     vector<vector<int>> matrix;

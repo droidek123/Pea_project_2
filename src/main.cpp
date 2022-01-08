@@ -63,19 +63,6 @@ int main() {
                 simulatedAnnealing.solve(graph, time, temperatureFactor);
                 break;
             }
-            case '9':
-                int x;
-                cout << "Enter amount of nodes: ";
-                cin >> x;
-                graph.generateGraph(x);
-                break;
-            case 'a':
-                if (graph.number_of_vertices <= 1) {
-                    cout << ("No adjacency matrix was created.\n");
-                    break;
-                }
-                graph.display();
-                break;
             default:
                 cout << "Wrong option chosen.\n";
         }
@@ -87,15 +74,12 @@ int main() {
 void displayMainMenu(){
     cout << "================== MENU ==================" << endl;
     cout << "\t   1. Load from file" << endl;
-    cout << "\t   3. Enter the time" << endl;
+    cout << "\t   2. Enter the time" << endl;
     cout << "\t   3. Enter the stop criterion" << endl;
     cout << "\t   4. Diversification on / off" << endl;
     cout << "\t   5. Choice of neighborhood" << endl;
     cout << "\t   6. Tabu search" << endl;
     cout << "\t   7. Simulated Annealing" << endl;
-    cout << "\t   9. Generate adjacency matrix" << endl;
-    cout << "\t   a. Display adjacency matrix" << endl;
-    cout << "\t   b. Tests" << endl;
     cout << "\t   0. Exit" << endl << endl;
     cout << "Chosen option:  ";
 }

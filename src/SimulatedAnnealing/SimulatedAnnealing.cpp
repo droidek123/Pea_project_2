@@ -14,78 +14,71 @@ void SimulatedAnnealing::solve(const Graph &graph, int time, double rate) {
     size = graph.number_of_vertices;
     timeBound = time;
     coolingRate = rate;
-    temperatureBuffer = calculateTemperature();
+    temperature = calculateTemperature();
     vector<int> best;
+
+    // wulosowanie permutacji początkowej
     vector<int> permutation = random_permutation(size);
     vector<int> next(permutation);
+
     std::clock_t start;
     int firstToSwap;
     int secondToSwap;
-    double temperature = temperatureBuffer;
-    int result = 1 << 30;
+    int result = INT_MAX;
     double foundTime = 0;
     start = std::clock();
+    int nextCost;
+    int steps;
 
-    while (true) {
-        while (temperature >= 0.1) {
-            int steps = 3 * size;
-
-            next = permutation;
-
-            int nextCost;
-
-
-            for (int i = steps; i > 0; i--) {
-                do {
+        while (true)
+        {
+            steps =  100*size;
+            for (int i = steps; i > 0; i--)
+            {
+                next = permutation;
+                do
+                {
                     firstToSwap = rand() % size;
                     secondToSwap = rand() % size;
                 } while (firstToSwap == secondToSwap);
 
-                std::swap(next[firstToSwap], next[secondToSwap]);
+                std::swap(next[firstToSwap],next[secondToSwap]);
 
                 nextCost = calculatePath(next);
 
                 int difference = result - nextCost;
 
-                if (difference > 0) {
+                if (difference > 0)
+                {
                     result = nextCost;
                     best = next;
-                    foundTime = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+                    foundTime = (std::clock() - start) / (double)CLOCKS_PER_SEC;
                 }
-                double p  = getProbability(difference, temperature);
-                double zxu = ((double) rand() / RAND_MAX) + 1;
-                if (difference > 0 ||
-                    (difference < 0 && p > zxu)) {
+
+                if (difference > 0 || (difference < 0 && getProbability(difference,temperature) > ((double)rand() / RAND_MAX)))
+                {
                     permutation = next;
-                    break;
-                } else {
-                    std::swap(next[firstToSwap], next[secondToSwap]);
                 }
 
-                time = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+                time = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
-                if (time >= timeBound) {
+                if (time >= timeBound || temperature <= 0.1)
+                {
                     cout << "Droga: ";
-                    for (int d = 0; d < size; d++) {
+                    for (int d = 0; d < size; d++)
+                    {
                         cout << best[d] << " ";
                     }
 
                     cout << "\nKoszt: " << result << endl;
                     cout << "Znaleziono po: " << foundTime << " s " << endl;
-                    cout << "Temperatura koncowa: " << temperature << endl;
-                    cout << "Procent błedu: " << (((double)(result - 2755)) / 2755.0) << endl;
+                    cout << "Temperatura koncowa: "<< temperature << endl;
                     cout << endl;
                     return;
                 }
             }
             temperature *= coolingRate;
         }
-
-        temperature = temperatureBuffer;
-        permutation = random_permutation(size);
-
-    }
-
 }
 
 vector<int> SimulatedAnnealing::random_permutation(int size) {
@@ -106,27 +99,21 @@ double SimulatedAnnealing::calculateTemperature() {
 
     int firstToSwap;
     int secondToSwap;
-    int delta;
-    int buffer = 0;
+    int best = INT_MAX;
 
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 10000; i++){
         do {
             firstToSwap = rand() % size;
             secondToSwap = rand() % size;
         } while (firstToSwap == secondToSwap);
 
         origin = random_permutation(size);
-        vector<int> neighbour(origin);
+        if (best > calculatePath(origin)){
+            best = calculatePath(origin);
+        }
 
-        std::swap(neighbour[firstToSwap], neighbour[secondToSwap]);
-
-        delta = fabs(calculatePath(origin) - calculatePath(neighbour));
-        buffer += delta;
     }
-
-    buffer /= 10000;
-
-    return (-1 * buffer) / log(0.99);
+    return best;
 }
 
 int SimulatedAnnealing::calculatePath(vector<int> path) {
