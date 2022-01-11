@@ -55,7 +55,9 @@ int main() {
                 break;
             case '6': {
                 TS tabuSearch;
-                std::cout << tabuSearch.tabuSearch(graph,time, diversification, neighborhood);
+                for(int i = 0; i < 10;i++) {
+                    std::cout << tabuSearch.tabuSearch(graph, time, diversification, neighborhood);
+                }
                 break;
             }
             case '7': {

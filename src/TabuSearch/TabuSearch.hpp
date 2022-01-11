@@ -7,9 +7,9 @@
 #include <vector>
 
 struct TabuElement {
-    int i;
-    int j;
-    int lifetime;
+    int first_city;
+    int second_city;
+    int life_time;
 };
 
 class TS {
@@ -18,7 +18,7 @@ public:
 private:
     vector<vector<int>> matrix;
     vector<int> current_permutation;
-//    vector<int> best_permutation;
+    vector<int> next_permutation;
     int number_of_vertexes = 0;
     bool diversification;
     double stopCriterion ; // time in seconds
@@ -28,7 +28,6 @@ private:
     int countPath(const vector<int> &path);
     bool isInTabu(int i, int j);
 
-//    void swap(int left, int right);
     void insert(int left, int right);
     static vector<int> randomPermutation(int size);
 };
