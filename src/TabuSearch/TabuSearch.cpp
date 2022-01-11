@@ -37,7 +37,7 @@ std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool div, int 
 
         for (int i = 1; i < number_of_vertexes - 1; i++) {
             for (int j = 1; j < number_of_vertexes - 1; j++) {
-                if (i != j && isInTabu(i,j)) {
+                if (i != j && !isInTabu(i,j)) {
 
                     switch (currentNeighbourhood) {  // choose neighbourhood
                         case 0:
@@ -57,23 +57,25 @@ std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool div, int 
                             result_permutation[k] = current_permutation[k]; // here is the best permutation in the neighbourhood
                         }
                     }
-                    switch (currentNeighbourhood) {
-                        case 0:
-                            swap(current_permutation[i], current_permutation[j]);
-                            break;
-                        case 1:
-                            insert(j, i);
-                            break;
-                    }
+//                    else{
+//                        switch (currentNeighbourhood) {
+//                            case 0:
+//                                swap(current_permutation[i], current_permutation[j]);
+//                                break;
+//                            case 1:
+//                                insert(j, i);
+//                                break;
+//                        }
+//                    }
                 }
             }
         }
 
-        int tmp = countPath(current_permutation); // the length of the found route
+        //int tmp = countPath(current_permutation); // the length of the found route
 
-        if (tmp < length){ // if the solution is better, change for the new one
+        if (min < length){ // if the solution is better, change for the new one
             numberOfIterationsWithoutChange = number_of_vertexes * 6;
-            length = tmp;
+            length = min;
 //            for (int i = 0; i < number_of_vertexes; i++){
 //                result_permutation[i] = current_permutation[i];
 //            }
@@ -100,11 +102,11 @@ std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool div, int 
         // diversification: if better after the restart then swap
         if(this->diversification && (numberOfIterationsWithoutChange <= 0)){
             current_permutation = randomPermutation(number_of_vertexes);
-            tmp = countPath(current_permutation);
+            min = countPath(current_permutation);
 
             numberOfIterationsWithoutChange = number_of_vertexes * 6;
-            if (tmp <= length){
-                length = tmp;
+            if (min <= length){
+                length = min;
 //                for (int i = 0; i < number_of_vertexes; i++){
 //                    result_permutation[i] = current_permutation[i];
 //                }
@@ -128,10 +130,10 @@ std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool div, int 
 bool TS::isInTabu(int i, int j) {
     for (auto & k : tabuList){
         if ((k.i == i && k.j == j)||(k.j == i && k.i == j)){
-            return false;
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
 int TS::countPath(const vector<int> &path) {

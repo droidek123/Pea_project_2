@@ -60,7 +60,9 @@ int main() {
             }
             case '7': {
                 SimulatedAnnealing simulatedAnnealing;
-                simulatedAnnealing.solve(graph, time, temperatureFactor,neighborhood);
+                for(int i = 0; i < 10;i++) {
+                    simulatedAnnealing.solve(graph, time, temperatureFactor, neighborhood);
+                }
                 break;
             }
             default:

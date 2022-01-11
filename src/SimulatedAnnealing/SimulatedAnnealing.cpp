@@ -1,6 +1,7 @@
 #include <random>
 #include <ctime>
 #include <iostream>
+#include <algorithm>
 #include "SimulatedAnnealing.hpp"
 
 using namespace std;
@@ -32,7 +33,7 @@ void SimulatedAnnealing::solve(const Graph &graph, int time, double rate, int ne
 
         while (true)
         {
-            steps =  100*size;
+            steps =  1000*size;
             for (int i = steps; i > 0; i--)
             {
                 next = permutation;
@@ -42,7 +43,7 @@ void SimulatedAnnealing::solve(const Graph &graph, int time, double rate, int ne
                     second = rand() % size;
                 } while (first == second);
 
-                if (neighborhood == 0) std::swap(next[first],next[second]);
+                if (neighborhood == 0) swap(next[first],next[second]);
                 else next = insert(next,first,second);
 
 
@@ -74,7 +75,9 @@ void SimulatedAnnealing::solve(const Graph &graph, int time, double rate, int ne
 
                     cout << "\nKoszt: " << result << endl;
                     cout << "Znaleziono po: " << foundTime << " s " << endl;
+                    cout << "Algorytm trwal: " << time << "s" << endl;
                     cout << "Temperatura koncowa: "<< temperature << endl;
+                    cout << "Blad wzgledny: " << ((((double )result - 1606) / 1608)*100) << endl;
                     cout << endl;
                     return;
                 }
@@ -98,22 +101,11 @@ vector<int> SimulatedAnnealing::random_permutation(int size) {
 
 double SimulatedAnnealing::calculateTemperature() {
     vector<int> origin;
-
-    int first;
-    int second;
     int best = INT_MAX;
 
     for (int i = 0; i < 10000; i++){
-        do {
-            first = rand() % size;
-            second = rand() % size;
-        } while (first == second);
-
         origin = random_permutation(size);
-        if (best > calculatePath(origin)){
-            best = calculatePath(origin);
-        }
-
+        if (best > calculatePath(origin)) best = calculatePath(origin);
     }
     return best;
 }
