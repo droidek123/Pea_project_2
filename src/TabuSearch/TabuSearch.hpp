@@ -14,21 +14,24 @@ struct TabuElement {
 
 class TS {
 public:
-    std::string tabuSearch(const Graph& graph, int timeForSearch, bool diversification, int neighborhood);
+    void solve(const Graph &graph, int timeForSearch, bool diversification, int neighborhood);
+
 private:
     vector<vector<int>> matrix;
     vector<int> current_permutation;
     vector<int> next_permutation;
     int number_of_vertexes = 0;
     bool diversification;
-    double stopCriterion ; // time in seconds
-    int currentNeighbourhood ;
+    double stopCriterion;
+    int currentNeighbourhood;
     std::vector<TabuElement> tabuList;
 
     int countPath(const vector<int> &path);
+
     bool isInTabu(int i, int j);
 
     void insert(int left, int right);
+
     static vector<int> randomPermutation(int size);
 };
 

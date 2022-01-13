@@ -10,106 +10,134 @@ SimulatedAnnealing::SimulatedAnnealing() = default;
 
 SimulatedAnnealing::~SimulatedAnnealing() = default;
 
-void SimulatedAnnealing::solve(const Graph &graph, int time, double rate, int neighborhood) {
+
+/**
+ * Glowna funkcja otpowiadajaca za wykonywanie się algorytmu
+ * @param graph graf z którego pobieramy macierz sąsiedztwa
+ * @param time maksymalny czas wykonywania sie w algorytu
+ * @param cooling_rate wspolczynnik wyzarzania
+ * @param neighborhood rodzaj sasiedztwa 0 - swap, 1 insert
+ * @param age mnożnik epoki
+ */
+void SimulatedAnnealing::solve(const Graph &graph, int time, double cooling_rate, int neighborhood, int age) {
     matrix = graph.matrix;
     size = graph.number_of_vertices;
     timeBound = time;
-    coolingRate = rate;
+    coolingRate = cooling_rate;
     temperature = calculateTemperature();
     vector<int> best;
 
-    // wulosowanie permutacji początkowej
+    // wlosowanie permutacji początkowej
     vector<int> permutation = random_permutation(size);
-    vector<int> next(permutation);
+    vector<int> next;
 
     std::clock_t start;
     int first;
     int second;
-    int result = INT_MAX;
-    double foundTime = 0;
+    int result = calculatePath(permutation);
+    int permCost = calculatePath(permutation);
     start = std::clock();
     int nextCost;
-    int steps;
+    if (age == 0) age = 1000;
+    int steps = age * size;
 
-        while (true)
+    while (true) {
+        for (int i = steps; i > 0; i--) // wykonuje sie przez dlugosc epoki
         {
-            steps =  1000*size;
-            for (int i = steps; i > 0; i--)
-            {
-                next = permutation;
-                do
-                {
-                    first = rand() % size;
-                    second = rand() % size;
-                } while (first == second);
+            next = permutation;
+            do {
+                first = rand() % size;
+                second = rand() % size;
+            } while (first == second);
 
-                if (neighborhood == 0) swap(next[first],next[second]);
-                else next = insert(next,first,second);
+            // tworzymy nowego saisada
+            if (neighborhood == 0) swap(next[first], next[second]);
+            else next = insert(next, first, second);
 
 
-                nextCost = calculatePath(next);
+            nextCost = calculatePath(next);
 
-                int difference = result - nextCost;
+            int difference = permCost - nextCost;
 
-                if (difference > 0)
-                {
-                    result = nextCost;
-                    best = next;
-                    foundTime = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-                }
-
-                if (difference > 0 || (difference < 0 && getProbability(difference,temperature) > ((double)rand() / RAND_MAX)))
-                {
-                    permutation = next;
-                }
-
-                time = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-                if (time >= timeBound || temperature <= 0.1)
-                {
-                    cout << "Droga: ";
-                    for (int d = 0; d < size; d++)
-                    {
-                        cout << best[d] << " ";
-                    }
-
-                    cout << "\nKoszt: " << result << endl;
-                    cout << "Znaleziono po: " << foundTime << " s " << endl;
-                    cout << "Algorytm trwal: " << time << "s" << endl;
-                    cout << "Temperatura koncowa: "<< temperature << endl;
-                    cout << "Blad wzgledny: " << ((((double )result - 1606) / 1608)*100) << endl;
-                    cout << endl;
-                    return;
-                }
+            // jesli rozwiazanie jest gorsze to wykonujemy losowanie czy chcemy przyjąc to rozwiazanie
+            if (difference <= 0) {
+                if (getProbability(difference, temperature) < (double) rand() / RAND_MAX)
+                    continue;
             }
-            temperature *= coolingRate;
+
+            permutation = next;
+            permCost = nextCost;
+
+            if (difference > 0) {
+                result = nextCost;
+            }
+
+            time = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+            if (time >= timeBound) {
+                cout << result << endl;
+                return;
+            }
         }
+
+        temperature *= coolingRate; // wyzyrzarzanie
+        if (temperature <= 0.1) {
+            cout << result << endl;
+            return;
+        }
+    }
 }
 
+/**
+ *  Funkcja generująca losowe roziazanie
+ * @param size rozmiar pliku na którym pracujemy
+ * @return zwraca losowe rozwiazanie
+ */
 vector<int> SimulatedAnnealing::random_permutation(int size) {
     vector<int> temp;
     temp.reserve(size);
-
     for (int i = 0; i < size; i++) {
         temp.push_back(i);
     }
-
     shuffle(temp.begin(), temp.end(), std::mt19937(std::random_device()()));
-
     return temp;
 }
 
+/**
+ * Funkcja licząca temperaturę początkową
+ * @return zwraca temperaturę początkową
+ */
 double SimulatedAnnealing::calculateTemperature() {
     vector<int> origin;
-    int best = INT_MAX;
 
-    for (int i = 0; i < 10000; i++){
+    int firstToSwap;
+    int secondToSwap;
+    int delta;
+    int buffer = 0;
+
+    for (int i = 0; i < 1000; i++) {
+        do {
+            firstToSwap = rand() % size;
+            secondToSwap = rand() % size;
+        } while (firstToSwap == secondToSwap);
+
         origin = random_permutation(size);
-        if (best > calculatePath(origin)) best = calculatePath(origin);
+        vector<int> neighbour(origin);
+
+        swap(neighbour[firstToSwap], neighbour[secondToSwap]);
+
+        delta = fabs(calculatePath(origin) - calculatePath(neighbour));
+        buffer += delta;
+
     }
-    return best;
+    buffer /= 10000;
+    return (-1 * buffer) / log(0.99);
 }
 
+/**
+ *  Oblicza koszt sciezki
+ * @param path sciezka ktorej koszt chcemy obliczyc
+ * @return zwraca koszt sciezki
+ */
 int SimulatedAnnealing::calculatePath(vector<int> path) {
     int cost = 0;
 
@@ -121,25 +149,37 @@ int SimulatedAnnealing::calculatePath(vector<int> path) {
     return cost;
 }
 
+/**
+ * Funkcjia akceptacji
+ * @param diff roznica pomiedzy rozwiazaniem a jego sasiadem
+ * @param temperature temperatura
+ * @return
+ */
 double SimulatedAnnealing::getProbability(int diff, double temperature) {
     return exp(diff / temperature);
 }
 
-vector<int> SimulatedAnnealing::insert(vector<int> permutation, int left, int right) {
-    if (right < left){
-        int tmp = permutation[left];
-        for (int i = left; i > right; i--){
-            permutation[i] = permutation[i-1];
+/**
+ * implementacja sasiedztwa typu insert
+ * @param permutation rozwiazenie na ktorym generujemy sasiedztwo
+ * @param first
+ * @param second
+ * @return zwraca nowego sasiada
+ */
+vector<int> SimulatedAnnealing::insert(vector<int> &permutation, int first, int second) {
+    if (second < first) {
+        int tmp = permutation[first];
+        for (int i = first; i > second; i--) {
+            permutation[i] = permutation[i - 1];
         }
-        permutation[right] = tmp;
+        permutation[second] = tmp;
         return permutation;
-    }
-    else {
-        int tmp = permutation[left];
-        for (int i = left; i < right; i++){
-            permutation[i] = permutation[i+1];
+    } else {
+        int tmp = permutation[first];
+        for (int i = first; i < second; i++) {
+            permutation[i] = permutation[i + 1];
         }
-        permutation[right] = tmp;
+        permutation[second] = tmp;
         return permutation;
     }
 

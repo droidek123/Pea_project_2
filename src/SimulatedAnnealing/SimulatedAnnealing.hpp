@@ -8,7 +8,6 @@
 
 class SimulatedAnnealing {
 public:
-    [[maybe_unused]] std::vector<int> solution;
     double temperature = 0;
     double coolingRate = 0;
     double timeBound = 0;
@@ -18,12 +17,12 @@ public:
     SimulatedAnnealing();
     ~SimulatedAnnealing();
 
-    void solve(const Graph &graph, int time, double rate, int neighborhood);
+    void solve(const Graph &graph, int time, double cooling_rate, int neighborhood, int age);
     static vector<int> random_permutation(int size);
     double calculateTemperature();
     int calculatePath(vector <int> path);
     static double getProbability(int diff, double temperature);
-    static vector<int> insert(vector<int> permutation, int left, int right);
+    static vector<int> insert(vector<int> &permutation, int first, int second);
 };
 
 

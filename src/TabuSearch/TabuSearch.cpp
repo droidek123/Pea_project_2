@@ -1,17 +1,19 @@
-//
-// Created by Andrzej on 22.11.2021.
-//
-
 #include <algorithm>
 #include <ctime>
 #include <iostream>
 #include <random>
-#include <sstream>
 #include "TabuSearch.hpp"
 
 using namespace std;
 
-std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool div, int neighborhood) {
+/**
+ * Glowna funkcja otpowiadajaca za wykonywanie się algorytmu
+ * @param graph graf z którego pobieramy macierz sąsiedztwa
+ * @param timeForSearch maksymalny czas wykonywania sie w algorytu
+ * @param div czy dywersyfikacaj jest wlaczana
+ * @param neighborhood rodzaj sasiedztwa 0 - swap, 1 insert
+ */
+void TS::solve(const Graph &graph, int timeForSearch, bool div, int neighborhood) {
     this->diversification = div;
     this->currentNeighbourhood = neighborhood;
     matrix = graph.matrix;
@@ -26,20 +28,20 @@ std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool div, int 
     vector<int> result_permutation = current_permutation;
     int length = countPath(current_permutation);
 
-    int numberOfIterationsWithoutChange = number_of_vertexes * 6; // maximum number of iterations without a change - diversification
-    while (time  < stopCriterion){
+    int numberOfIterationsWithoutChange = number_of_vertexes * 6; // liczba powtorzen bez dywersyfikacji
+    while (time < stopCriterion) {
 
         TabuElement tabuElement{};
         int min = INT32_MAX;
         next_permutation = current_permutation;
-        vector<int>nextperm(current_permutation);
+        vector<int> nextperm(current_permutation);
 
 
         for (int i = 1; i < number_of_vertexes; i++) {
             for (int j = 1; j < number_of_vertexes; j++) {
-                if (i != j && !isInTabu(i,j)) {
+                if (i != j && !isInTabu(i, j)) {
                     next_permutation = nextperm;
-                    switch (currentNeighbourhood) {  // choose neighbourhood
+                    switch (currentNeighbourhood) {  // wybor sasiedztwa
                         case 0:
                             swap(next_permutation[i], next_permutation[j]);
                             break;
@@ -50,49 +52,48 @@ std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool div, int 
                     int tmp = countPath(next_permutation);
 
                     if (tmp <= min) {
-                        tabuElement.first_city = j;
-                        tabuElement.second_city = i;
+                        tabuElement.first_city = i;
+                        tabuElement.second_city = j;
                         min = tmp;
                         for (int k = 0; k < number_of_vertexes; k++) {
-                            current_permutation[k] = next_permutation[k]; // here is the best permutation in the neighbourhood
+                            current_permutation[k] = next_permutation[k];
                         }
                     }
                 }
             }
         }
 
-        //int tmp = countPath(current_permutation); // the length of the found route
-
-        if (min < length){ // if the solution is better, change for the new one
+        // aktualizacja najlepszego rozwiazania
+        if (min < length) {
             numberOfIterationsWithoutChange = number_of_vertexes * 6;
             length = min;
             result_permutation = current_permutation;
         }
 
-        //tabu list actualisation: reducing the lifetime (cadence) and removing unnecessary items
-        for(auto it = tabuList.begin(); it != tabuList.end(); ++it) {
+        // aktualizacja tabu listy
+        for (auto it = tabuList.begin(); it != tabuList.end(); ++it) {
             it->life_time--;
 
-            if (it->life_time == 0){
+            if (it->life_time == 0) {
                 tabuList.erase(it);
                 --it;
             }
         }
 
-        // add new elements to the tabu list
-        if (tabuList.size() < number_of_vertexes * 2 ) { // maximum size of the tabu list
+        // dodawanie elementów do listy
+        if (tabuList.size() < number_of_vertexes * 2) {
             tabuElement.life_time = number_of_vertexes * 2;
             tabuList.push_back(tabuElement);
         }
 
 
-        // diversification: if better after the restart then swap
-        if(this->diversification && (numberOfIterationsWithoutChange <= 0)){
+        // dywersfikacja
+        if (this->diversification && (numberOfIterationsWithoutChange <= 0)) {
             current_permutation = randomPermutation(number_of_vertexes);
             min = countPath(current_permutation);
 
             numberOfIterationsWithoutChange = number_of_vertexes * 6;
-            if (min <= length){
+            if (min <= length) {
                 length = min;
                 result_permutation = current_permutation;
             }
@@ -101,25 +102,33 @@ std::string TS::tabuSearch(const Graph& graph, int timeForSearch, bool div, int 
         time = (std::clock() - t) / (double) CLOCKS_PER_SEC;
     }
 
-    std::stringstream ss;
-    ss << length << std::endl;
+    cout << length << endl;
 
     current_permutation.clear();
     result_permutation.clear();
     tabuList.clear();
-    return ss.str();
 }
 
-
+/**
+ *  Funkcja sprawdzajaca czy element znajdyje sie na liscie tabu
+ * @param i
+ * @param j
+ * @return
+ */
 bool TS::isInTabu(int i, int j) {
-    for (auto & k : tabuList){
-        if ((k.first_city == i && k.second_city == j)||(k.second_city == i && k.first_city == j)){
+    for (auto &k: tabuList) {
+        if ((k.first_city == i && k.second_city == j) || (k.second_city == i && k.first_city == j)) {
             return true;
         }
     }
     return false;
 }
 
+/**
+ *  Oblicza koszt sciezki
+ * @param path sciezka ktorej koszt chcemy obliczyc
+ * @return zwraca koszt sciezki
+ */
 int TS::countPath(const vector<int> &path) {
     int cost = 0;
 
@@ -131,27 +140,37 @@ int TS::countPath(const vector<int> &path) {
     return cost;
 }
 
+/**
+ * implementacja sasiedztwa typu insert
+ * @param permutation rozwiazenie na ktorym generujemy sasiedztwo
+ * @param first
+ * @param second
+ * @return zwraca nowego sasiada
+ */
 void TS::insert(int left, int right) {
     if (right == left) return;
-    if (right < left){
+    if (right < left) {
         int tmp = next_permutation[left];
-        for (int i = left; i > right; i--){
-            next_permutation[i] = next_permutation[i-1];
+        for (int i = left; i > right; i--) {
+            next_permutation[i] = next_permutation[i - 1];
         }
         next_permutation[right] = tmp;
-    }
-    else {
+    } else {
         int tmp = next_permutation[left];
-        for (int i = left; i < right; i++){
-            next_permutation[i] = next_permutation[i+1];
+        for (int i = left; i < right; i++) {
+            next_permutation[i] = next_permutation[i + 1];
         }
         next_permutation[right] = tmp;
     }
 
 }
 
-vector<int> TS::randomPermutation(int size)
-{
+/**
+ *  Funkcja generująca losowe roziazanie
+ * @param size rozmiar pliku na którym pracujemy
+ * @return zwraca losowe rozwiazanie
+ */
+vector<int> TS::randomPermutation(int size) {
     vector<int> temp;
     temp.reserve(size);
     for (int i = 0; i < size; i++) {
